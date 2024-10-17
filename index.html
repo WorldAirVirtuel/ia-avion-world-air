@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Avions</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .airplane-list {
+            max-width: 600px;
+            margin: auto;
+        }
+        .airplane {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            transition: background-color 0.3s ease;
+        }
+        .airplane h3 {
+            margin-top: 0;
+        }
+        .btn-group {
+            margin-top: 10px;
+        }
+        .btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-right: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .btn-delete {
+            background-color: #dc3545;
+        }
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+        .btn-reset {
+            background-color: #28a745;
+        }
+        .btn-reset:hover {
+            background-color: #218838;
+        }
+        .tag {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            color: white;
+            margin-right: 5px;
+        }
+        .tag-lfpo {
+            background-color: blue;
+        }
+        .tag-lfmn {
+            background-color: yellow;
+            color: black;
+        }
+        .tag-cyul {
+            background-color: gray;
+        }
+        .add-airplane-form {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 15px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .add-airplane-form input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        #search-bar {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Liste des Avions</h1>
+
+    <!-- Barre de recherche -->
+    <input type="text" id="search-bar" placeholder="Rechercher par numéro de vol..." oninput="searchByFlightNumber()">
+
+    <!-- Formulaire pour ajouter un avion -->
+    <div class="add-airplane-form">
+        <h3>Ajouter un nouvel avion</h3>
+        <input type="text" id="modele" placeholder="Modèle" required>
+        <input type="text" id="immatriculation" placeholder="Plaque d'immatriculation" required>
+        <input type="text" id="vol" placeholder="Numéro de vol" required>
+        <input type="text" id="depart" placeholder="Aéroport de départ" required>
+        <input type="text" id="arrivee" placeholder="Aéroport d'arrivée" required>
+        <button class="btn" onclick="addAirplane()">Ajouter un avion</button>
+    </div>
+
+    <!-- Bouton pour réinitialiser toutes les couleurs -->
+    <button class="btn btn-reset" onclick="resetAllColors()">Réinitialiser les couleurs de tous les avions</button>
+
+    <div class="airplane-list" id="airplane-list">
+        <!-- Les avions existants seront affichés ici -->
+    </div>
+
+    <script>
+        // Fonction pour changer la couleur et la réinitialiser si recliquée
+        function action(actionType, airplaneId) {
+            const airplane = document.getElementById(airplaneId);
+            const currentColor = airplane.style.backgroundColor;
+            let newColor = '';
+
+            // Définir la couleur selon l'action si différente de la couleur actuelle
+            if (actionType === 'fly') {
+                newColor = currentColor === 'lightgreen' ? 'white' : 'lightgreen';
+            } else if (actionType === 'transit') {
+                newColor = currentColor === 'orange' ? 'white' : 'orange';
+            } else if (actionType === 'changement') {
+                newColor = currentColor === 'red' ? 'white' : 'red';
+            } else if (actionType === 'maintenance') {
+                newColor = currentColor === 'violet' ? 'white' : 'violet';
+            }
+
+            // Appliquer la nouvelle couleur
+            airplane.style.backgroundColor = newColor;
+
+            // Sauvegarder la nouvelle couleur dans localStorage
+            localStorage.setItem(airplaneId, newColor);
+        }
+
+        // Fonction pour restaurer les couleurs et les avions au chargement de la page
+        function restoreAirplanes() {
+            // Restaurer les avions
+            const airplanes = JSON.parse(localStorage.getItem('airplanes')) || [];
+            airplanes.forEach(airplane => {
+                addAirplaneToDOM(airplane.modele, airplane.immatriculation, airplane.vol, airplane.depart, airplane.arrivee, airplane.id);
+            });
+
+            // Restaurer les couleurs des avions
+            airplanes.forEach(airplane => {
+                const savedColor = localStorage.getItem(airplane.id);
+                if (savedColor) {
+                    document.getElementById(airplane.id).style.backgroundColor = savedColor;
+                }
+            });
+        }
+
+        // Fonction pour ajouter un avion dans le DOM
+        function addAirplaneToDOM(modele, immatriculation, vol, depart, arrivee, id = null) {
+            if (!id) {
+                id = 'airplane' + Date.now(); // Générer un ID unique pour chaque avion
+            }
+
+            const airplaneList = document.getElementById('airplane-list');
+            const airplaneDiv = document.createElement('div');
+            airplaneDiv.id = id;
+            airplaneDiv.className = 'airplane';
+
+            // Ajouter les étiquettes selon l'aéroport de départ
+            let tag = '';
+            if (depart.toUpperCase() === 'LFPO') {
+                tag = `<span class="tag tag-lfpo">LFPO</span>`;
+            } else if (depart.toUpperCase() === 'LFMN') {
+                tag = `<span class="tag tag-lfmn">LFMN</span>`;
+            } else if (depart.toUpperCase() === 'CYUL') {
+                tag = `<span class="tag tag-cyul">CYUL</span>`;
+            }
+
+            airplaneDiv.innerHTML = `
+                ${tag}
+                <h3>Modèle: ${modele}</h3>
+                <p>Plaque d'immatriculation: ${immatriculation}</p>
+                <p>Vol: ${vol}</p>
+                <p>Départ: ${depart}</p>
+                <p>Arrivée: ${arrivee}</p>
+                <div class="btn-group">
+                    <button class="btn" onclick="action('fly', '${id}')">Fly</button>
+                    <button class="btn" onclick="action('transit', '${id}')">Transit</button>
+                    <button class="btn" onclick="action('changement', '${id}')">Changement</button>
+                    <button class="btn" onclick="action('maintenance', '${id}')">Maintenance</button>
+                    <button class="btn btn-delete" onclick="deleteAirplane('${id}')">Supprimer</button>
+                </div>
+            `;
+            airplaneList.appendChild(airplaneDiv);
+        }
+
+        // Fonction pour ajouter un nouvel avion
+        function addAirplane() {
+            const modele = document.getElementById('modele').value;
+            const immatriculation = document.getElementById('immatriculation').value;
+            const vol = document.getElementById('vol').value;
+            const depart = document.getElementById('depart').value;
+            const arrivee = document.getElementById('arrivee').value;
+
+            if (modele && immatriculation && vol && depart && arrivee) {
+                // Ajouter l'avion dans le DOM
+                const id = 'airplane' + Date.now(); // Générer un ID unique
+                addAirplaneToDOM(modele, immatriculation, vol, depart, arrivee, id);
+
+                // Sauvegarder l'avion dans localStorage
+                const airplanes = JSON.parse(localStorage.getItem('airplanes')) || [];
+                airplanes.push({ modele, immatriculation, vol, depart, arrivee, id });
+                localStorage.setItem('airplanes', JSON.stringify(airplanes));
+
+                // Réinitialiser le formulaire
+                document.getElementById('modele').value = '';
+                document.getElementById('immatriculation').value = '';
+                document.getElementById('vol').value = '';
+                document.getElementById('depart').value = '';
+                document.getElementById('arrivee').value = '';
+            } else {
+                alert("Veuillez remplir tous les champs !");
+            }
+        }
+
+        // Fonction pour supprimer un avion
+        function deleteAirplane(id) {
+            // Supprimer l'élément du DOM
+            const airplane = document.getElementById(id);
+            airplane.remove();
+
+            // Supprimer l'avion du localStorage
+            let airplanes = JSON.parse(localStorage.getItem('airplanes')) || [];
+            airplanes = airplanes.filter(airplane => airplane.id !== id);
+            localStorage.setItem('airplanes', JSON.stringify(airplanes));
+
+            // Supprimer la couleur associée à cet avion du localStorage
+            localStorage.removeItem(id);
+        }
+
+        // Fonction pour réinitialiser toutes les couleurs des avions
+        function resetAllColors() {
+            const airplanes = JSON.parse(localStorage.getItem('airplanes')) || [];
+            airplanes.forEach(airplane => {
+                const airplaneElement = document.getElementById(airplane.id);
+                if (airplaneElement) {
+                    airplaneElement.style.backgroundColor = 'white';
+                }
+                localStorage.setItem(airplane.id, 'white'); // Réinitialiser la couleur dans localStorage
+            });
+        }
+
+        // Fonction pour rechercher par numéro de vol
+        function searchByFlightNumber() {
+            const searchTerm = document.getElementById('search-bar').value.toLowerCase();
+            const airplanes = document.querySelectorAll('.airplane');
+            airplanes.forEach(airplane => {
+                const vol = airplane.querySelector('p:nth-child(4)').textContent.toLowerCase();
+                if (vol.includes(searchTerm)) {
+                    airplane.style.display = 'block';
+                } else {
+                    airplane.style.display = 'none';
+                }
+            });
+        }
+
+        // Appeler la fonction pour restaurer les avions et couleurs au chargement de la page
+        window.onload = restoreAirplanes;
+    </script>
+</body>
+</html>
