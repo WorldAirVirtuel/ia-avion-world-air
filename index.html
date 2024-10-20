@@ -140,24 +140,42 @@
         firebase.initializeApp(firebaseConfig);
         var database = firebase.database();
 
-        // Fonction pour changer la couleur et la réinitialiser si recliquée
-        function action(actionType, airplaneId) {
-            const airplane = document.getElementById(airplaneId);
-            const currentColor = airplane.style.backgroundColor;
-            let newColor = '';
+        // Fonction pour ajouter un avion dans Firebase
+        function addAirplane() {
+            const modele = document.getElementById('modele').value;
+            const immatriculation = document.getElementById('immatriculation').value;
+            const vol = document.getElementById('vol').value;
+            const depart = document.getElementById('depart').value;
+            const arrivee = document.getElementById('arrivee').value;
 
-            if (actionType === 'fly') {
-                newColor = currentColor === 'lightgreen' ? 'white' : 'lightgreen';
-            } else if (actionType === 'transit') {
-                newColor = currentColor === 'orange' ? 'white' : 'orange';
-            } else if (actionType === 'changement') {
-                newColor = currentColor === 'red' ? 'white' : 'red';
-            } else if (actionType === 'maintenance') {
-                newColor = currentColor === 'violet' ? 'white' : 'violet';
+            // Vérifier si tous les champs sont remplis
+            if (modele && immatriculation && vol && depart && arrivee) {
+                console.log('Tous les champs sont remplis. Ajout de l\'avion en cours...');
+
+                // Ajouter l'avion à Firebase
+                const newAirplaneRef = database.ref('airplanes').push();
+                newAirplaneRef.set({
+                    modele: modele,
+                    immatriculation: immatriculation,
+                    vol: vol,
+                    depart: depart,
+                    arrivee: arrivee,
+                    color: 'white'  // Couleur par défaut
+                }).then(() => {
+                    console.log('Avion ajouté avec succès');
+                }).catch((error) => {
+                    console.error('Erreur lors de l\'ajout de l\'avion : ', error);
+                });
+
+                // Réinitialiser le formulaire
+                document.getElementById('modele').value = '';
+                document.getElementById('immatriculation').value = '';
+                document.getElementById('vol').value = '';
+                document.getElementById('depart').value = '';
+                document.getElementById('arrivee').value = '';
+            } else {
+                alert("Veuillez remplir tous les champs !");
             }
-
-            airplane.style.backgroundColor = newColor;
-            database.ref('airplanes/' + airplaneId).update({ color: newColor });
         }
 
         // Fonction pour restaurer les avions au chargement de la page depuis Firebase
@@ -170,36 +188,6 @@
                     addAirplaneToDOM(airplane.modele, airplane.immatriculation, airplane.vol, airplane.depart, airplane.arrivee, id, airplane.color);
                 }
             });
-        }
-
-        // Fonction pour ajouter un avion dans Firebase
-        function addAirplane() {
-            const modele = document.getElementById('modele').value;
-            const immatriculation = document.getElementById('immatriculation').value;
-            const vol = document.getElementById('vol').value;
-            const depart = document.getElementById('depart').value;
-            const arrivee = document.getElementById('arrivee').value;
-
-            if (modele && immatriculation && vol && depart && arrivee) {
-                const newAirplaneRef = database.ref('airplanes').push();
-                newAirplaneRef.set({
-                    modele: modele,
-                    immatriculation: immatriculation,
-                    vol: vol,
-                    depart: depart,
-                    arrivee: arrivee,
-                    color: 'white'  // Couleur par défaut
-                });
-
-                // Réinitialiser le formulaire
-                document.getElementById('modele').value = '';
-                document.getElementById('immatriculation').value = '';
-                document.getElementById('vol').value = '';
-                document.getElementById('depart').value = '';
-                document.getElementById('arrivee').value = '';
-            } else {
-                alert("Veuillez remplir tous les champs !");
-            }
         }
 
         // Fonction pour ajouter un avion dans le DOM
@@ -223,7 +211,7 @@
                 ${tag}
                 <h3>Modèle: ${modele}</h3>
                 <p>Plaque d'immatriculation: ${immatriculation}</p>
-                <p>Vol: ${vol}</p>
+                <p>Numéro de vol: ${vol}</p>
                 <p>Départ: ${depart}</p>
                 <p>Arrivée: ${arrivee}</p>
                 <div class="btn-group">
@@ -236,12 +224,6 @@
             `;
 
             airplaneList.appendChild(airplaneDiv);
-        }
-
-        // Fonction pour supprimer un avion de Firebase
-        function deleteAirplane(id) {
-            database.ref('airplanes/' + id).remove();
-            document.getElementById(id).remove();
         }
 
         // Fonction pour réinitialiser toutes les couleurs des avions
