@@ -274,5 +274,27 @@
         // Appeler la fonction pour restaurer les avions et couleurs au chargement de la page
         window.onload = restoreAirplanes;
     </script>
+    <!-- Ajouter Firebase dans ton fichier HTML -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+    // Configuration de Firebase (cette config est donnée quand tu crées ton projet sur Firebase)
+    var firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        databaseURL: "YOUR_DATABASE_URL",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+
+    // Initialiser Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    var database = firebase.database();
+</script>
+
 </body>
 </html>
